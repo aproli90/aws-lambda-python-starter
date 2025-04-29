@@ -72,6 +72,7 @@ project/
      - `iam-role.yaml`: Update both `ProjectPrefix` and `ProjectPrefixLower` parameter default values
    - `scripts/sam-commands.ps1`: Update the default values for `$ProjectPrefix` and `$ProjectPrefixCamel`
    - `.github/workflows/sam-deploy.yml`: Update the default values for workflow inputs
+   - **AWS Secrets Manager**: Ensure your secrets in AWS Secrets Manager follow the naming convention `{project-prefix}-secrets` (using the kebab-case prefix)
 
 ### 2. Customize Lambda Functions
 
@@ -138,7 +139,19 @@ This repository includes a GitHub Actions workflow that automatically deploys th
    - `AWS_SECRET_ACCESS_KEY`
    - `AWS_REGION`
 
-2. Push changes to the main branch to trigger the deployment.
+2. The IAM user whose credentials you add to GitHub secrets should have these policies attached:
+   - `AmazonAPIGatewayAdministrator`
+   - `AmazonAPIGatewayInvokeFullAccess`
+   - `AmazonEC2ContainerRegistryFullAccess`
+   - `AmazonS3FullAccess`
+   - `AmazonSNSFullAccess`
+   - `AWSCloudFormationFullAccess`
+   - `AWSLambda_FullAccess`
+   - `CloudWatchEventsFullAccess`
+   - `IAMFullAccess`
+   - `SecretsManagerReadWrite`
+
+3. Push changes to the main branch to trigger the deployment.
 
 ### Custom Deployments via GitHub Actions
 
