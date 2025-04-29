@@ -1,0 +1,13 @@
+{
+    "resource": "/hello",
+    "path": "/hello",
+    "httpMethod": "GET",
+    "headers": {
+        "Accept": "*/*",
+        "User-Agent": "curl/7.64.1"
+    },
+    "queryStringParameters": null,
+    "pathParameters": null,
+    "body": null,
+    "isBase64Encoded": false
+}

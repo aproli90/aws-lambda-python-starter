@@ -1,0 +1,12 @@
+{
+    "source": "aws.events",
+    "time": "2023-01-01T00:00:00Z",
+    "detail-type": "Scheduled Event",
+    "name": "DailyProcessing",
+    "detail": {
+        "scheduledTime": "2023-01-01T00:00:00Z"
+    },
+    "resources": [
+        "arn:aws:events:us-east-1:123456789012:rule/WFGClientsDailyTasks"
+    ]
+}

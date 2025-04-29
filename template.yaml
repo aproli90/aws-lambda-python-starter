@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  ${ProjectPrefix} Clients
+  SAM Template for AWS Lambda functions
+
+Parameters:
+  ProjectPrefix:
+    Type: String
+    Default: WFGClients
+    Description: Prefix for all resources in this stack
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 128
+    Architectures:
+      - x86_64
+
+Resources:
+  # API Lambda function
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      PackageType: Image
+      Role:
+        Fn::ImportValue:
+          Fn::Sub: "${ProjectPrefix}LambdaRoleArn"
+      MemorySize: 512
+      Timeout: 60
+      ImageConfig:
+        Command:
+          - src.api.app.lambda_handler
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        ProvisionedConcurrentExecutions: 2
+      Events:
+        Hello:
+          Type: Api
+          Properties:
+            Path: /hello
+            Method: get
+        Health:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: get
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./
+      DockerTag: python3.12-v1
+
+  # Event Lambda function
+  EventFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      PackageType: Image
+      Role:
+        Fn::ImportValue:
+          Fn::Sub: "${ProjectPrefix}LambdaRoleArn"
+      MemorySize: 1024
+      Timeout: 300
+      ImageConfig:
+        Command:
+          - src.event.app.lambda_handler
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        ProvisionedConcurrentExecutions: 2
+      Events:
+        DailyProcessing:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 * * * ? *)  # Run every hour
+            Name: 
+              Fn::Sub: "${ProjectPrefix}DailyTasks"
+            Description: Triggers the event function every hour
+            Enabled: true
+            Input: '{"name": "DailyProcessing"}'
+        DataSync:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 */6 * * ? *)  # Run every 6 hours
+            Name: 
+              Fn::Sub: "${ProjectPrefix}SyncData"
+            Description: Synchronizes data every 6 hours
+            Enabled: true
+            Input: '{"name": "DataSync"}'
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./
+      DockerTag: python3.12-v1
+
+Outputs:
+  ApiFunction:
+    Description: "API Lambda Function ARN"
+    Value: !GetAtt ApiFunction.Arn
+  ApiFunctionApi:
+    Description: "API Gateway endpoint URL for Prod stage for API function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  HealthApi:
+    Description: "API Gateway endpoint URL for Prod stage for health endpoint"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/health/"
+  EventFunction:
+    Description: "Event Lambda Function ARN"
+    Value: !GetAtt EventFunction.Arn

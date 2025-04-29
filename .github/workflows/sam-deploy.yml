@@ -1,0 +1,86 @@
+name: Deploy SAM Application
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      project_prefix:
+        description: 'Project prefix in kebab-case (e.g., wfg-clients)'
+        required: false
+        default: 'wfg-clients'
+      project_prefix_camel:
+        description: 'Project prefix in CamelCase (e.g., WFGClients)'
+        required: false
+        default: 'WFGClients'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      
+      - name: Set up AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+        
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Set project prefixes
+        id: set-prefixes
+        run: |
+          # Use inputs from workflow_dispatch or default values
+          PROJECT_PREFIX="${{ github.event.inputs.project_prefix || 'wfg-clients' }}"
+          PROJECT_PREFIX_CAMEL="${{ github.event.inputs.project_prefix_camel || 'WFGClients' }}"
+          echo "PROJECT_PREFIX=${PROJECT_PREFIX}" >> $GITHUB_OUTPUT
+          echo "PROJECT_PREFIX_CAMEL=${PROJECT_PREFIX_CAMEL}" >> $GITHUB_OUTPUT
+      
+      - name: Deploy IAM Role
+        run: |
+          aws cloudformation deploy \
+            --template-file iam-role.yaml \
+            --stack-name ${{ steps.set-prefixes.outputs.PROJECT_PREFIX }}-iam \
+            --capabilities CAPABILITY_IAM \
+            --parameter-overrides \
+              ProjectPrefix=${{ steps.set-prefixes.outputs.PROJECT_PREFIX_CAMEL }} \
+              ProjectPrefixLower=${{ steps.set-prefixes.outputs.PROJECT_PREFIX }} \
+            --no-fail-on-empty-changeset
+      
+      - name: Create ECR Repository if not exist
+        run: |
+          # Create a single ECR repository for all functions
+          aws ecr describe-repositories --repository-names ${{ steps.set-prefixes.outputs.PROJECT_PREFIX }} || \
+          aws ecr create-repository --repository-name ${{ steps.set-prefixes.outputs.PROJECT_PREFIX }}
+      
+      - name: Get ECR Repository URI
+        id: get-ecr-uri
+        run: |
+          ECR_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+          ECR_REGION=${{ secrets.AWS_REGION }}
+          ECR_URI="${ECR_ACCOUNT}.dkr.ecr.${ECR_REGION}.amazonaws.com"
+          echo "ECR_URI=${ECR_URI}" >> $GITHUB_OUTPUT
+      
+      - name: Build SAM application
+        run: |
+          sam build
+      
+      - name: Deploy SAM application
+        run: |
+          sam deploy --stack-name ${{ steps.set-prefixes.outputs.PROJECT_PREFIX }} \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --capabilities CAPABILITY_IAM \
+            --parameter-overrides \
+              ProjectPrefix=${{ steps.set-prefixes.outputs.PROJECT_PREFIX_CAMEL }} \
+            --image-repository ${{ steps.get-ecr-uri.outputs.ECR_URI }}/${{ steps.set-prefixes.outputs.PROJECT_PREFIX }}
