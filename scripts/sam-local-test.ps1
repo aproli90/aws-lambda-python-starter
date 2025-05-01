@@ -33,28 +33,11 @@ function Invoke-SamFunction {
     # Use sam local invoke with the --debug flag to see more information
     # Change to project root directory before running sam commands
     Push-Location $projectRoot
-    sam local invoke $FunctionName -e $EventFile --env-vars env.json --debug
+    sam local invoke $FunctionName -e $EventFile --debug --profile "default"
     Pop-Location
     
     Write-Host "Test completed for $($FunctionName): $($Description)." -ForegroundColor Green
 }
-
-# Create environment variables file
-$ENV_VARS = @{
-    "Parameters" = @{
-        "ApiFunction" = @{
-            "SUPABASE_URL" = "https://mpfxatlnmikcwvvxejzf.supabase.co"
-            "LOG_LEVEL" = "INFO"
-        }
-        "EventFunction" = @{
-            "SUPABASE_URL" = "https://mpfxatlnmikcwvvxejzf.supabase.co"
-            "LOG_LEVEL" = "INFO"
-        }
-    }
-}
-
-# Save environment variables to file
-$ENV_VARS | ConvertTo-Json -Depth 10 | Out-File -FilePath (Join-Path $projectRoot "env.json") -Encoding utf8
 
 # Main execution
 Write-Host "Starting SAM local testing..." -ForegroundColor Cyan

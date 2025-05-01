@@ -20,24 +20,25 @@ This repository contains a reusable starter kit for AWS Lambda functions, built 
 project/
 ├── .github/
 │   └── workflows/
-│       └── sam-deploy.yml    # GitHub Actions workflow for CI/CD
+│       └── sam-deploy.yml      # GitHub Actions workflow for CI/CD
 ├── src/
-│   ├── api/                  # API Lambda function
-│   │   ├── app.py            # Lambda handler code
-│   │   └── api_manager.py    # API business logic
-│   ├── event/                # Event Lambda function
-│   │   ├── app.py            # Lambda handler code
-│   │   └── event_manager.py  # Event business logic
-│   ├── functions/            # Business logic implementation
-│   └── utils/                # Shared utilities
-│       └── secrets_manager.py # AWS Secrets Manager integration
-├── events/                   # Sample event files for testing
-├── template.yaml             # SAM template for main resources
-├── iam-role.yaml             # IAM role definition
+│   ├── api/                    # API Lambda function
+│   │   ├── app.py              # Lambda handler code
+│   │   └── api_manager.py      # API business logic
+│   ├── event/                  # Event Lambda function
+│   │   ├── app.py              # Lambda handler code
+│   │   └── event_manager.py    # Event business logic
+│   ├── functions/              # Business logic implementation
+│   └── utils/                  # Shared utilities
+│       └── secrets_manager.py  # AWS Secrets Manager integration
+│       └── logger.py           # AWS Lambda logger
+├── events/                     # Sample event files for testing
+├── template.yaml               # SAM template for main resources
+├── iam-role.yaml               # IAM role definition
 ├── scripts/
-│   └── sam-commands.ps1      # Helper PowerShell script
-├── Dockerfile                # Docker configuration for Lambda
-├── requirements.txt          # Python dependencies
+│   └── sam-commands.ps1        # Helper PowerShell script
+├── Dockerfile                  # Docker configuration for Lambda
+├── requirements.txt            # Python dependencies
 └── README.md
 ```
 
