@@ -88,13 +88,7 @@ def lambda_handler(event, context, input_logger=None):
         stacktrace = traceback.format_exc()
         logger.error(stacktrace)
         
-        return {
-            "statusCode": 500,
-            "body": json.dumps({
-                "error": str(ex),
-                "message": f"Error processing EVENT:{event_name}"
-            })
-        }
+        raise RuntimeError(error_msg) from ex
     finally:
         total_exec_duration = __get_current_time_ms() - start_time
         logger.info(f"TotalExecDuration: {total_exec_duration} ms")
